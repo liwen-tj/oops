@@ -3,44 +3,53 @@ import heapq
 import numpy as np
 from sklearn import linear_model
 from sklearn.neighbors import NearestNeighbors
+from sklearn.feature_selection import f_regression
+
 
 class RegBoost:
-    feature_num = 2     # 每个线性回归的特征数目
+    feature_num = 9     # 每个线性回归的特征数目
     learning_rate = 0.1 # 学习速率
-    max_layer = 10      # 最大递归次数（最多经过的学习器个数）
-    min_sample = 30     # 数目少于min_sample个时则不再进行线性回归
-    knn = 9             # K近邻中的参数K
-    bagging_fraction = 0.8 # 对样本进行采样
-    feature_fraction = 0.6 # 对特征进行采样
-    features = 81          # 总特征数目
+    max_layer = 15      # 最大递归次数（最多经过的学习器个数）
+    min_sample = 20     # 数目少于min_sample个时则不再进行线性回归
+    knn = 3             # K近邻中的参数K
+    bagging_fraction = 1 # 对样本进行采样
+    feature_fraction = 1 # 对特征进行采样
+    features = 9          # 总特征数目
 
 
-    def select_features(self, samples):
-        gains = []
+    def __init__(self, trainX, trainY):
+        self.trainX = trainX
+        self.trainY = trainY
+
+
+    def select_features(self, X):
+        '''X是样本索引列表'''
+        gains, _ = f_regression(self.trainX[X,:], np.array([self.trainY[i] for i in X]))
+        # 特征采样
         for i in range(self.features):
-            if random.random() > self.feature_fraction: # 特征采样 
-                gains.append(-1)
-            else: # 被抽中，正常计算其gain
-                gains.append(random.random()+i) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TO DO
+            if random.random() > self.feature_fraction:
+                gains[i] = -1
+        
         # 最大的self.feature_num个数的索引
-        max_gains_id = map(gains.index, heapq.nlargest(self.feature_num, gains))
-        return list(max_gains_id)
+        # max_gains_id = map(gains.index, heapq.nlargest(self.feature_num, gains))
+        max_gains_id = heapq.nlargest(self.feature_num, range(len(gains)), gains.take)
+        sid = list(max_gains_id)
+        # print('selected feature id =', sid)
+        return sid
 
 
     def get_model(self, Xs, layer):
         '''Xs: 样本在训练集中的索引'''
+        print('layer =', layer)
         #0 根据bagging_fraction对样本采样
         X = []
         for x in Xs:
             if random.random() < self.bagging_fraction:
                 X.append(x)
-        samples = self.trainX[X,:]
-        dataY = np.array([self.trainY[i] for i in X])
-
         #1 选择信息增益最大的feature_num个特征
-        best_features = self.select_features(samples)
-        dataX = samples[:,best_features]
-
+        best_features = self.select_features(X)
+        dataX = self.trainX[X,:][:,best_features]
+        dataY = np.array([self.trainY[i] for i in X])
         #2 执行回归操作
         regr = linear_model.LinearRegression()
         regr.fit(dataX, dataY)
@@ -71,17 +80,16 @@ class RegBoost:
         return model
 
 
-    def train(self, trainX, trainY):
-        (self.trainX, self.trainY) = (trainX, trainY)
-        self.model = self.get_model(range(len(trainX)), self.max_layer)
+    def train(self):
+        self.model = self.get_model(range(len(self.trainX)), self.max_layer)
         print("...train done...")
     
 
     def test(self, testX):
-        model = self.model
         results = []
         for tx in testX:
             preds = []
+            model = self.model
             while model is not None:
                 txx = np.array([[tx[f] for f in model[1]]])
                 # model[0]:regr    model[1]:best_features
@@ -97,6 +105,5 @@ class RegBoost:
                     else:
                         kn += 1
                 model = model[4] if kp > kn else model[5]
-            results.append(sum(preds[:-1] + preds[-1]))
+            results.append(sum(preds[:-1])*self.learning_rate + preds[-1])
         return results
-        

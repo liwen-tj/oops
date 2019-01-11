@@ -21,16 +21,16 @@ def train(trainX, trainY):
 	# 模型
     params = {
         'learning_rate': 0.1,
-        'objective': 'regression_l2',
+        'objective': 'regression_l1',
         'max_depth': 4,
         'feature_fraction': 0.8,
         'bagging_fraction': 0.8,
-        'min_data_in_leaf': 20,
+        'min_data_in_leaf': 50,
         'metric': 'mse',
         'seed': 2019
     }
     train_data = lgb.Dataset(trainX, label=trainY)
-    bst = lgb.train(params, train_data, num_boost_round=200)
+    bst = lgb.train(params, train_data, num_boost_round=300)
     return bst
 
 

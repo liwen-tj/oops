@@ -32,4 +32,6 @@ if __name__ == '__main__':
     mse = mean_squared_error(testY, ypred)
     mae = mean_absolute_error(testY, ypred)
     print('----------------------')
-    print(mse, mse**0.5, mae)
+    print('mse =', mse)
+    print('rmse =', mse**0.5)
+    print('mae =', mae)
