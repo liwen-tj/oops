@@ -10,13 +10,12 @@ import imp
 
 def read_data(filename):
     # 打乱数据
-    #data = pd.read_csv(filename).sample(frac=1)
-    data = pd.read_csv(filename)
+    data = pd.read_csv(filename)#.sample(frac=1)
     # X_scaled（二维数组）, Ys（一维数组）都是ndarray
     Ys = data.critical_temp.values
     Xs = data.drop(columns=['critical_temp']).values
     X_scaled = preprocessing.MinMaxScaler().fit_transform(Xs)
-    B = 20000 # Train Num
+    B = 19000 # Train Num
     T = 21263
     (trainX, testX) = (X_scaled[:B], X_scaled[B:T])
     (trainY, testY) = (Ys[:B], Ys[B:T])
@@ -24,26 +23,31 @@ def read_data(filename):
 
 
 if __name__ == '__main__':
-    ypreds = []
-    for _ in range(1):
-        (trainX, testX, trainY, testY) = read_data("../train.csv")
-        print(trainY[100:105])
+    (trainX, testX, trainY, testY) = read_data("../train.csv")
+    # train a model
+    models = []
+    for r in range(50):
+        print('r =', r+1)
         model = RegBoost(trainX, trainY)
         model.train()
-        y = model.test(testX)
-        ypreds.append(y)
-        print(trainY[100:105])
-        print('\n\n\n')
+        models.append(model)
+        (trainX, testX, trainY, testY) = read_data("../train.csv")
+        ys = []
+        for m in models:
+            ys.append(m.test(trainX))
+        ys = np.array(ys)
+        ys = 0.1 * np.sum(ys, axis=0)
+        trainY = np.array([trainY[i] - ys[i] for i in range(19000)])
+        print(trainY[:10])
+        print('\n')
         
-
+    # test
+    ypreds = []
+    for m in models:
+        ypreds.append(m.test(testX))
     ypreds = np.array(ypreds)
-    instances = [1,12,35,90,130, 210,220,245,890,1000]
-    print(ypreds[:,instances])
-    print("====================")
-    print([testY[i] for i in instances])
-    print('------------------------------------------------')
-
-    ypred = np.mean(ypreds, axis=0) # 按列求平均
+    # ypred = np.sum(ypreds, axis=0) # 按列求平均
+    ypred = 0.1 * np.sum(ypreds[range(49),:], axis=0) + ypreds[-1]
 
     mse = mean_squared_error(testY, ypred)
     mae = mean_absolute_error(testY, ypred)

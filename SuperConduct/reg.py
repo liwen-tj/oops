@@ -1,6 +1,6 @@
+from sklearn import linear_model
 import pandas as pd
 from sklearn import preprocessing
-from sklearn.neighbors import NearestNeighbors
 import numpy as np
 
 
@@ -21,12 +21,9 @@ def read_data(filename):
 
 if __name__ == '__main__':
     (trainX, testX, trainY, testY) = read_data("train.csv")
-    neigh = NearestNeighbors(n_neighbors=3)
-    neigh.fit(trainX)
-    (dist, ind) = neigh.kneighbors(testX)
-
-    ypred = np.array([(trainY[i[0]] + trainY[i[1]] + trainY[i[2]]) / 3.0 for i in ind])
-    #ypred = np.array([trainY[i[0]] for i in ind])
+    regr = linear_model.LinearRegression()
+    regr.fit(trainX, trainY)
+    ypred = regr.predict(testX)
 
     from sklearn.metrics import mean_squared_error, mean_absolute_error
     mse = mean_squared_error(testY, ypred)

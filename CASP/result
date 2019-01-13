@@ -1,0 +1,6 @@
+        
+        rmse    mae
+knn     4       2.4
+lgb     4.61    3.21
+reg     5.1     4.3
+regbst  4.59   2.59

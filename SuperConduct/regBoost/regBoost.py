@@ -7,13 +7,13 @@ from sklearn.feature_selection import f_regression
 
 
 class RegBoost:
-    feature_num = 10     # 每个线性回归的特征数目
+    feature_num = 7     # 每个线性回归的特征数目
     learning_rate = 0.3 # 学习速率
-    max_layer = 13      # 最大递归次数（最多经过的学习器个数）
-    min_sample = 30     # 数目少于min_sample个时则不再进行线性回归
+    max_layer = 4      # 最大递归次数（最多经过的学习器个数）
+    min_sample = 100     # 数目少于min_sample个时则不再进行线性回归
     knn = 7             # K近邻中的参数K
     bagging_fraction = 0.7 # 对样本进行采样
-    feature_fraction = 0.4 # 对特征进行采样
+    feature_fraction = 0.3 # 对特征进行采样
     features = 81          # 总特征数目
 
 

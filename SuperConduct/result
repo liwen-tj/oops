@@ -1,0 +1,5 @@
+        rmse    mae
+knn     10      5.5
+lgb     12.2    6.37
+reg     17      13
+regboost 12.2   5.6
